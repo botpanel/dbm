@@ -285,6 +285,10 @@ module.exports = {
       });
     });
 
+    ws.on('close', () => {
+      console.log("[DBM Dashboard] Websocket connection closed.");
+    });
+
     ws.on("error", (err) => {
       console.log(`[DBM Dashboard] Websocket Error: ${err}`);
     });
