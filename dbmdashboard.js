@@ -128,7 +128,7 @@ module.exports = {
     </style>
     <div class="container">
       <div class="box">
-        <h1 class="title">DBM Bot Host Dashboard</h1>
+        <h1 class="title">DBM Dashboard</h1>
         <p class="text">This is the extension for <a href="https://dbmdashboard.com">DBM Dashboard</a>.</p>
       </div>
       <div class="box error-box" id="error-container">
@@ -266,14 +266,12 @@ module.exports = {
           case 4: {
             const { guildId, interactionId } = data.d;
             let serverData = fs.readFileSync(join(__dirname, "../", "data", "servers.json"), "utf-8");
-            console.log({serverData})
+
             try {
               serverData = JSON.parse(serverData);
             } catch (e) {
               return console.log(`[DBM Dashboard] Error parsing servers.json: ${e}`);
             }
-
-            console.log({serverData})
 
             ws.send(JSON.stringify({
               op: 5,
