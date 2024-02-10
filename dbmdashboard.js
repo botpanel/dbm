@@ -1,5 +1,6 @@
 const { join } = require("path");
 const fs = require("fs");
+const WebSocket = require("ws");
 
 module.exports = {
   //---------------------------------------------------------------------
@@ -227,86 +228,87 @@ module.exports = {
     const debug = true;
 
     console.log("[DBM Dashboard] Waiting for bot to start...");
-    // Set timeout to wait for client initialization. If a better method arises in the future, please change for cookie. -Finbar
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const bot = DBM.Bot.bot;
-    bot.dashboard = {};
 
-    console.log("[DBM Dashboard] Initialized.");
+    DBM.Bot.onReady = async () => {
+      const bot = DBM.Bot.bot;
+      bot.dashboard = {};
 
-    let applicationId, applicationSecret;
+      console.log("[DBM Dashboard] Initialized.");
 
-    const config = join(__dirname, "../", "dashboard-config.json");
-    if (config) {
-      const data = require(config);
-      applicationId = data.id;
-      applicationSecret = data.secret;
-    }
+      let applicationId, applicationSecret;
 
-    const WebSocket = require("ws");
-    const ws = new WebSocket("ws://localhost:3001/api/ws");
-    DBM.Bot.bot.dashboard.ws = ws;
+      const config = join(__dirname, "../", "dashboard-config.json");
+      if (config) {
+        const data = require(config);
+        applicationId = data.id;
+        applicationSecret = data.secret;
+      }
 
-    ws.on("open", () => {
-      console.log("[DBM Dashboard] Connected to dashboard.");
-      ws.on("message", (message) => {
-        const data = JSON.parse(message);
-        if (debug)
-          console.log(`[DBM Dashboard] Received message: ${message}`);
+      const WebSocket = require("ws");
+      const ws = new WebSocket("ws://localhost:3001/api/ws");
+      DBM.Bot.bot.dashboard.ws = ws;
 
-        switch (data.op) {
-          case 0: {
-            console.log("[DBM Dashboard] Attempting to authenticate...")
-            ws.send(JSON.stringify({
-              op: 0,
-              d: {
-                connectAs: "application",
-                applicationId,
-                applicationSecret
-              }
-            }));
-            break;
-          }
-          case 1: {
-            console.log(`[DBM Dashboard] Successfully authenticated with application "${data.d.name}" (${applicationId})!`)
-            break;
-          }
-          case 2: {
-            console.log(`[DBM Dashboard] Error authenticating: ${data.d.error}`)
-            break;
-          }
-          case 4: {
-            const { guildId, interactionId } = data.d;
-            let serverData = fs.readFileSync(join(__dirname, "../", "data", "servers.json"), "utf-8");
+      ws.on("open", () => {
+        console.log("[DBM Dashboard] Connected to dashboard.");
+        ws.on("message", (message) => {
+          const data = JSON.parse(message);
+          if (debug)
+            console.log(`[DBM Dashboard] Received message: ${message}`);
 
-            try {
-              serverData = JSON.parse(serverData);
-            } catch (e) {
-              return console.log(`[DBM Dashboard] Error parsing servers.json: ${e}`);
+          switch (data.op) {
+            case 0: {
+              console.log("[DBM Dashboard] Attempting to authenticate...")
+              ws.send(JSON.stringify({
+                op: 0,
+                d: {
+                  connectAs: "application",
+                  applicationId,
+                  applicationSecret
+                }
+              }));
+              break;
             }
+            case 1: {
+              console.log(`[DBM Dashboard] Successfully authenticated with application "${data.d.name}" (${applicationId})!`)
+              break;
+            }
+            case 2: {
+              console.log(`[DBM Dashboard] Error authenticating: ${data.d.error}`)
+              break;
+            }
+            case 4: {
+              const { guildId, interactionId } = data.d;
+              let serverData = fs.readFileSync(join(__dirname, "../", "data", "servers.json"), "utf-8");
 
-            ws.send(JSON.stringify({
-              op: 5,
-              d: {
-                interactionId,
-                data: serverData[guildId] || {}
+              try {
+                serverData = JSON.parse(serverData);
+              } catch (e) {
+                return console.log(`[DBM Dashboard] Error parsing servers.json: ${e}`);
               }
-            }));
-            break;
+
+              ws.send(JSON.stringify({
+                op: 5,
+                d: {
+                  interactionId,
+                  data: serverData[guildId] || {}
+                }
+              }));
+              break;
+            }
+            case 6: {
+              bot.emit("dbmDashboardDataUpdate", data.d)
+            }
           }
-          case 6: {
-            bot.emit("dbmDashboardDataUpdate", data.d)
-          }
-        }
+        });
       });
-    });
 
-    ws.on('close', () => {
-      console.log("[DBM Dashboard] Websocket connection closed.");
-    });
+      ws.on('close', () => {
+        console.log("[DBM Dashboard] Websocket connection closed.");
+      });
 
-    ws.on("error", (err) => {
-      console.log(`[DBM Dashboard] Websocket Error: ${err}`);
-    });
+      ws.on("error", (err) => {
+        console.log(`[DBM Dashboard] Websocket Error: ${err}`);
+      });
+    }
   },
 };
