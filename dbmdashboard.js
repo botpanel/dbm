@@ -84,6 +84,16 @@ module.exports = {
           border-radius: 5px;
       }
       
+      .error-box {
+          border: 1px solid red;
+          display: none;
+      }
+      
+      .message-box {
+          display: none;
+          border: 1px solid green;
+      }
+      
       .title {
           margin: 0px;
           padding: 0px;
@@ -120,11 +130,6 @@ module.exports = {
       .button:hover {
           background-color: #292929;
       }
-      
-      .error-box {
-          border: 1px solid red;
-          display: none;
-      }
     </style>
     <div class="container">
       <div class="box">
@@ -134,6 +139,9 @@ module.exports = {
       <div class="box error-box" id="error-container">
         <h1 class="title">Error</h1>
         <p class="text" id="error"></p>
+      </div>
+      <div class="box message-box" id="message-container">
+        <p class="text" id="message"></p>
       </div>
       
       <div class="box">
@@ -160,9 +168,10 @@ module.exports = {
     const id = document.getElementById("applicationId");
 
     const error = document.getElementById("error");
+    const message = document.getElementById("message");
 
-    if (fs.existsSync(path.join(__dirname, "../", "dashboard-config.json"))) {
-      const data = JSON.parse(fs.readFileSync(join(__dirname, "../", "dashboard-config.json")));
+    if (fs.existsSync(join(__dirname, "../", "dashboard-config.json"))) {
+      const data = JSON.parse(fs.readFileSync(join(__dirname, "../", "dashboard-config.json"), 'utf-8'));
       secret.value = data.secret || "";
       id.value = data.id || "";
     }
@@ -179,9 +188,12 @@ module.exports = {
         id: id.value
       };
 
-      fs.writeFileSync(path.join(__dirname, "../", "dashboard-config.json"), JSON.stringify(data));
+      fs.writeFileSync(join(__dirname, "../", "dashboard-config.json"), JSON.stringify(data));
 
       error.parentElement.style.display = "none";
+
+      message.innerText = "Saved!";
+      message.parentElement.style.display = "block";
     });
   },
 
@@ -214,9 +226,9 @@ module.exports = {
   mod: async function (DBM) {
     const debug = true;
 
-    console.log("[DBM Dashboard] Initializing...");
+    console.log("[DBM Dashboard] Waiting for bot to start...");
     // Set timeout to wait for client initialization. If a better method arises in the future, please change for cookie. -Finbar
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const bot = DBM.Bot.bot;
     bot.dashboard = {};
 
@@ -280,6 +292,10 @@ module.exports = {
                 data: serverData[guildId] || {}
               }
             }));
+            break;
+          }
+          case 6: {
+            bot.emit("dbmDashboardDataUpdate", data.d)
           }
         }
       });
