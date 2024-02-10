@@ -1,6 +1,8 @@
 module.exports = {
   name: "Store DBM Dashboard Interaction Info",
 
+  displayName: "Store Dashboard Interaction Info",
+
   section: "DBM Dashboard",
 
   subtitle(data, presets) {
