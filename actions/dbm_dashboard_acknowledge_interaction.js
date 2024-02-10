@@ -1,6 +1,8 @@
 module.exports = {
   name: "DBM Dashboard Acknowledge Interaction",
 
+  displayName: "Acknowledge Dashboard Interaction",
+
   section: "DBM Dashboard",
 
   subtitle(data, presets) {
