@@ -1,7 +1,7 @@
 # Bot Panel w/ Discord Bot Maker Integration Guide
 This is the setup guide for using [Bot Panel](https://botpanel.xyz) with [Discord Bot Maker](https://store.steampowered.com/app/682130/Discord_Bot_Maker/).
 
-# installation
+# Instillation
 
 1. Have DBM installed and a bot project open.
 2. Visit the [Bot Panel Developer Dashboard](https://dev.botpanel.xyz).
