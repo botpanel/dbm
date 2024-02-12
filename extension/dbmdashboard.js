@@ -225,7 +225,7 @@ module.exports = {
   //---------------------------------------------------------------------
 
   mod: async function (DBM) {
-    const debug = true;
+    const debug = false;
 
     console.log("[DBM Dashboard] Waiting for bot to start...");
 
@@ -245,7 +245,7 @@ module.exports = {
       }
 
       const WebSocket = require("ws");
-      const ws = new WebSocket("ws://localhost:3001/api/ws");
+      const ws = new WebSocket("wss://botpanel.xyz/api/ws");
       bot.dashboard.ws = ws;
 
       ws.on("open", () => {
