@@ -18,6 +18,7 @@ This is the setup guide for using [Bot Panel](https://botpanel.xyz) with [Discor
 12. In your DBM project, in the application navigation menu click the `Extensions` dropdown, and select `DBM Dashboard`.
 13. Copy and paste your application id and secret into the field, and hit `Save`.
 14. From this point to see if everything is configured properly, restart your bot and open your console. You should see the message `[DBM Dashboard] Successfully authenticated with application "APPLICATION_NAME" (APPLICATION_ID)!`
+15. Set up data receive event (Read below)
 
 # Receiving Data
 
