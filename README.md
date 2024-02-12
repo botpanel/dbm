@@ -18,3 +18,9 @@ This is the setup guide for using [Bot Panel](https://botpanel.xyz) with [Discor
 12. In your DBM project, in the application navigation menu click the `Extensions` dropdown, and select `DBM Dashboard`.
 13. Copy and paste your application id and secret into the field, and hit `Save`.
 14. From this point to see if everything is configured properly, restart your bot and open your console. You should see the message `[DBM Dashboard] Successfully authenticated with application "APPLICATION_NAME" (APPLICATION_ID)!`
+
+# Receiving Data
+
+When a user modifies data on their dashboard, an interaction is sent from our server to your bot, much alike how discord interactions work. This interaction stores data such as the variable name, data, etc. **You must acknowledge every request for it to be marked as successful on your user's dashboard.** To do this create an event on your bot using the `DBM Dashboard Data Changed` event. This event has one temporary variable input, which is the `Interaction Object`, and is fired every time a user submits a data change request from their dashboard. When you receive this request, you can use the `Store Dashboard Interaction Info` action to store all necessary data and make changes to your bot's backend storage. Once all data changes have been made, make sure to acknowledge the interaction using the `Acknowledge Dashboard Interaction` action.
+
+An example rawdata doing all of the above using DBM's built in server data database can be found [here](https://rawdata.dbm-network.org/raw-data/1535).
