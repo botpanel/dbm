@@ -269,7 +269,13 @@ module.exports = {
               break;
             }
             case 1: {
-              console.log(`[DBM Dashboard] Successfully authenticated with application "${data.d.name}" (${applicationId})!`)
+              console.log(`[DBM Dashboard] Successfully authenticated with application "${data.d.name}" (${applicationId})!`);
+
+              setInterval(() => {
+                ws.send(JSON.stringify({
+                  op: 8
+                }));
+              }, data.d.heartbeatInterval);
               break;
             }
             case 2: {
