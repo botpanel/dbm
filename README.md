@@ -8,10 +8,10 @@ This is the setup guide for using [Bot Panel](https://botpanel.xyz) with [Discor
 3. Log in to the developer dashboard.
 4. Navigate to the `Manage Applications` page and click `Add Application`.
    <br><br>
-   ![Image](https://github.com/dbm-dashboard/dbm/blob/50804e145d2b6f663523fa12399537dca0b600c6/.github/botpanel_dbm_step1.png?raw=true)
+   ![Image](https://github.com/botpanel/dbm/blob/50804e145d2b6f663523fa12399537dca0b600c6/.github/botpanel_dbm_step1.png?raw=true)
 6. Complete all fields.
-7. Download the files from the [/actions](https://github.com/dbm-dashboard/dbm/tree/main/actions) directory and place them in your project's `actions` folder.
-8. Download the files from the [/events](https://github.com/dbm-dashboard/dbm/tree/main/events) directory and place them in your project's `events` folder.
+7. Download the files from the [/actions](https://github.com/botpanel/dbm/tree/main/actions) directory and place them in your project's `actions` folder.
+8. Download the files from the [/events](https://github.com/botpanel/dbm/tree/main/events) directory and place them in your project's `events` folder.
 9. Download the extension from the [/extension](https://github.com/dbm-dashboard/dbm/tree/main/events) directory and place it in your project's `extensions` folder.
 10. Make sure you have restarted DBM after downloading and installing these mods.
 11. From the developer dashboard, take note of your application id and application secret. Do not share your secret with others.
