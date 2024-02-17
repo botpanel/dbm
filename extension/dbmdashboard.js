@@ -9,7 +9,7 @@ module.exports = {
   // This is the name of the editor extension displayed in the editor.
   //---------------------------------------------------------------------
 
-  name: "DBM Dashboard",
+  name: "Bot Panel",
 
   //---------------------------------------------------------------------
   // Is Editor Extension
@@ -250,7 +250,7 @@ module.exports = {
 
       ws.on("open", () => {
         console.log("[DBM Dashboard] Connected to dashboard.");
-        ws.on("message", (message) => {
+        ws.on("message", async (message) => {
           const data = JSON.parse(message);
           if (debug)
             console.log(`[DBM Dashboard] Received message: ${message}`);
@@ -278,6 +278,8 @@ module.exports = {
             }
             case 4: {
               const { guildId, interactionId } = data.d;
+
+              const guild = await bot.guilds.fetch({ guild: guildId, withCounts: false }).catch(() => null);
               let serverData = fs.readFileSync(join(__dirname, "../", "data", "servers.json"), "utf-8");
 
               try {
@@ -290,7 +292,8 @@ module.exports = {
                 op: 5,
                 d: {
                   interactionId,
-                  data: serverData[guildId] || {}
+                  data: serverData[guildId] || {},
+                  inGuild: !!guild
                 }
               }));
               break;
