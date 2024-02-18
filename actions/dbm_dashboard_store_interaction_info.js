@@ -11,6 +11,8 @@ module.exports = {
       "Variable Name",
       "Guild ID",
       "New Value",
+      "User ID",
+      "Input Type",
     ];
     return `${presets.getVariableText(data.sourceInteraction, data.varName)} - ${info[parseInt(data.info, 10)]}`;
   },
@@ -28,6 +30,12 @@ module.exports = {
         dataType = "String";
         break;
       case 2:
+        dataType = "String";
+        break;
+      case 4:
+        dataType = "String";
+        break;
+      case 5:
         dataType = "String";
         break;
     }
@@ -51,6 +59,8 @@ module.exports = {
         <option value="1">Variable Name</option>
         <option value="2">Guild ID</option>
         <option value="3">New Value</option>
+        <option value="4">User ID</option>
+        <option value="5">Input Type</option>
       </select>
     </div>
     
@@ -68,7 +78,7 @@ module.exports = {
     const storage = parseInt(data.storage, 10);
 
     const interaction = this.getVariable(parseInt(data.sourceInteraction, 10), varName, cache);
-    if(!interaction )
+    if (!interaction)
       return this.callNextAction(cache);
 
     switch (info) {
@@ -83,6 +93,12 @@ module.exports = {
         break;
       case 3:
         this.storeValue(interaction.data, storage, varName2, cache);
+        break;
+      case 4:
+        this.storeValue(interaction.userId, storage, varName2, cache);
+        break;
+      case 5:
+        this.storeValue(interaction.inputType, storage, varName2, cache);
         break;
     }
 
