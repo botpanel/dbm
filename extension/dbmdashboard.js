@@ -226,11 +226,14 @@ module.exports = {
 
   mod: async function (DBM) {
     const debug = false;
+    const { Bot, Events } = DBM;
 
     console.log("[DBM Dashboard] Waiting for bot to start...");
 
-    DBM.Bot.onReady = async () => {
-      const bot = DBM.Bot.bot;
+    const { onReady } = Bot;
+
+    Bot.onReady = async function dashboardOnReady(...params) {
+      const bot = Bot.bot;
       bot.dashboard = {};
 
       console.log("[DBM Dashboard] Initialized.");
@@ -305,7 +308,7 @@ module.exports = {
               break;
             }
             case 6: {
-              DBM.Events.dbmDashboardDataUpdate(data.d);
+              Events.dbmDashboardDataUpdate(data.d);
             }
           }
         });
@@ -318,6 +321,8 @@ module.exports = {
       ws.on("error", (err) => {
         console.log(`[DBM Dashboard] Websocket Error: ${err}`);
       });
+
+      onReady.apply(this, ...params);
     }
   },
 };
