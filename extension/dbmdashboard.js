@@ -226,102 +226,125 @@ module.exports = {
 
   mod: async function (DBM) {
     const debug = false;
+    const WebSocket = require("ws");
     const { Bot, Events } = DBM;
+    const { onReady } = Bot;
+
+    const OPCODES = {
+      AUTHENTICATE: 0,
+      AUTH_SUCCESS: 1,
+      ERROR: 2,
+      GUILD_INTERACTION: 4,
+      REQUEST_GUILD_DATA: 5,
+      MODIFY_GUILD_DATA: 6,
+      HEARTBEAT: 8,
+    };
+
+    let applicationId, applicationSecret;
+    const config = join(__dirname, "../", "dashboard-config.json");
+
+    if (config) {
+      const data = require(config);
+      applicationId = data.id;
+      applicationSecret = data.secret;
+    }
 
     console.log("[DBM Dashboard] Waiting for bot to start...");
 
-    const { onReady } = Bot;
-
     Bot.onReady = async function dashboardOnReady(...params) {
-      const bot = Bot.bot;
+      const bot = DBM.Bot.bot;
       bot.dashboard = {};
 
       console.log("[DBM Dashboard] Initialized.");
 
-      let applicationId, applicationSecret;
+      const connect = () => {
+        const ws = new WebSocket("wss://botpanel.xyz/api/ws");
 
-      const config = join(__dirname, "../", "dashboard-config.json");
-      if (config) {
-        const data = require(config);
-        applicationId = data.id;
-        applicationSecret = data.secret;
+        ws.on("open", () => {
+          console.log("[DBM Dashboard] Connected to dashboard.");
+        });
+
+        ws.on("close", () => {
+          console.log("[DBM Dashboard] Connection closed. retrying...");
+          setTimeout(connect, 5000);
+        });
+
+        ws.on("error", (err) => {
+          console.log(`[DBM Dashboard] Error: ${err}`);
+          console.log("[DBM Dashboard] Retrying...");
+          setTimeout(connect, 5000);
+        });
+
+        ws.on("message", (message) => handleMessage(message, ws));
+
+        bot.dashboard.ws = ws;
       }
 
-      const WebSocket = require("ws");
-      const ws = new WebSocket("wss://botpanel.xyz/api/ws");
-      bot.dashboard.ws = ws;
+      connect();
 
-      ws.on("open", () => {
-        console.log("[DBM Dashboard] Connected to dashboard.");
-        ws.on("message", async (message) => {
-          const data = JSON.parse(message);
-          if (debug)
-            console.log(`[DBM Dashboard] Received message: ${message}`);
-
-          switch (data.op) {
-            case 0: {
-              console.log("[DBM Dashboard] Attempting to authenticate...")
-              ws.send(JSON.stringify({
-                op: 0,
-                d: {
-                  connectAs: "application",
-                  applicationId,
-                  applicationSecret
-                }
-              }));
-              break;
+      const operationHandlers = {
+        [OPCODES.AUTHENTICATE]: ({ applicationId, applicationSecret }) => {
+          console.log("[DBM Dashboard] Attempting to authenticate...");
+          bot.dashboard.ws.send(JSON.stringify({
+            op: OPCODES.AUTHENTICATE,
+            d: {
+              connectAs: "application",
+              applicationId,
+              applicationSecret
             }
-            case 1: {
-              console.log(`[DBM Dashboard] Successfully authenticated with application "${data.d.name}" (${applicationId})!`);
+          }));
+        },
+        [OPCODES.AUTH_SUCCESS]: ({ data, ws }) => {
+          console.log(`[DBM Dashboard] Successfully authenticated with application "${data.d.name}" (${applicationId})!`);
+          setInterval(() => {
+            ws.send(JSON.stringify({
+              op: OPCODES.HEARTBEAT
+            }));
+          }, data.d.heartbeatInterval);
+        },
+        [OPCODES.ERROR]: ({ data }) => {
+          console.log(`[DBM Dashboard] Error: ${data.d.error}`);
+        },
+        [OPCODES.GUILD_INTERACTION]: async ({ data, ws }) => {
+          const { guildId, interactionId } = data.d;
 
-              setInterval(() => {
-                ws.send(JSON.stringify({
-                  op: 8
-                }));
-              }, data.d.heartbeatInterval);
-              break;
-            }
-            case 2: {
-              console.log(`[DBM Dashboard] Error: ${data.d.error}`)
-              break;
-            }
-            case 4: {
-              const { guildId, interactionId } = data.d;
+          const guild = await bot.guilds.fetch({ guild: guildId, withCounts: false }).catch(() => null);
+          let serverData = fs.readFileSync(join(__dirname, "../", "data", "servers.json"), "utf-8");
 
-              const guild = await bot.guilds.fetch({ guild: guildId, withCounts: false }).catch(() => null);
-              let serverData = fs.readFileSync(join(__dirname, "../", "data", "servers.json"), "utf-8");
-
-              try {
-                serverData = JSON.parse(serverData);
-              } catch (e) {
-                return console.log(`[DBM Dashboard] Error parsing servers.json: ${e}`);
-              }
-
-              ws.send(JSON.stringify({
-                op: 5,
-                d: {
-                  interactionId,
-                  data: serverData[guildId] || {},
-                  inGuild: !!guild
-                }
-              }));
-              break;
-            }
-            case 6: {
-              Events.dbmDashboardDataUpdate(data.d);
-            }
+          try {
+            serverData = JSON.parse(serverData);
+          } catch (e) {
+            return console.log(`[DBM Dashboard] Error parsing servers.json: ${e}`);
           }
-        });
-      });
 
-      ws.on('close', () => {
-        console.log("[DBM Dashboard] Websocket connection closed.");
-      });
+          ws.send(JSON.stringify({
+            op: OPCODES.REQUEST_GUILD_DATA,
+            d: {
+              interactionId,
+              data: serverData[guildId] || {},
+              inGuild: !!guild
+            }
+          }));
+        },
+        [OPCODES.MODIFY_GUILD_DATA]: ({ data }) => {
+          Events.dbmDashboardDataUpdate(data.d);
+        }
+      };
 
-      ws.on("error", (err) => {
-        console.log(`[DBM Dashboard] Websocket Error: ${err}`);
-      });
+      const handleMessage = async (message, ws) => {
+        const data = JSON.parse(message);
+        if (debug)
+          console.log(`[DBM Dashboard] Received message: ${message}`);
 
+        const handler = operationHandlers[data.op];
+        if (handler) {
+          try {
+            await handler({ data, ws, applicationId, applicationSecret });
+          } catch (e) {
+            console.log(`[DBM Dashboard] Error handling message: ${e}`);
+          }
+        }
+      }
       onReady.apply(this, ...params);
     }
   },
