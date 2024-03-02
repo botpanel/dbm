@@ -1,6 +1,5 @@
 const { join } = require("path");
 const fs = require("fs");
-const WebSocket = require("ws");
 
 module.exports = {
   //---------------------------------------------------------------------
@@ -256,23 +255,40 @@ module.exports = {
       bot.dashboard = {};
 
       console.log("[DBM Dashboard] Initialized.");
+      let isReconnecting = false;
 
       const connect = () => {
+        console.log("[DBM Dashboard] Connecting to dashboard...");
         const ws = new WebSocket("wss://botpanel.xyz/api/ws");
+
+        const timeout = setTimeout(() => {
+          console.log("[DBM Dashboard] Connection timeout. Retrying...");
+          ws.terminate();
+          isReconnecting = true;
+          setTimeout(connect, 5000);
+        }, 5000);
 
         ws.on("open", () => {
           console.log("[DBM Dashboard] Connected to dashboard.");
+          clearTimeout(timeout);
+          isReconnecting = false;
         });
 
         ws.on("close", () => {
-          console.log("[DBM Dashboard] Connection closed. retrying...");
-          setTimeout(connect, 5000);
+          if (!isReconnecting) {
+            console.log("[DBM Dashboard] Connection closed. retrying...");
+            isReconnecting = true;
+            setTimeout(connect, 5000);
+          }
         });
 
         ws.on("error", (err) => {
-          console.log(`[DBM Dashboard] Error: ${err}`);
-          console.log("[DBM Dashboard] Retrying...");
-          setTimeout(connect, 5000);
+          if (!isReconnecting) {
+            console.log(`[DBM Dashboard] Error: ${err}`);
+            console.log("[DBM Dashboard] Retrying...");
+            isReconnecting = true;
+            setTimeout(connect, 5000);
+          }
         });
 
         ws.on("message", (message) => handleMessage(message, ws));
@@ -290,7 +306,8 @@ module.exports = {
             d: {
               connectAs: "application",
               applicationId,
-              applicationSecret
+              applicationSecret,
+              version: "1.0.0"
             }
           }));
         },
@@ -306,7 +323,7 @@ module.exports = {
           console.log(`[DBM Dashboard] Error: ${data.d.error}`);
         },
         [OPCODES.GUILD_INTERACTION]: async ({ data, ws }) => {
-          const { guildId, interactionId } = data.d;
+          const { guildId, interactionId, include } = data.d;
 
           const guild = await bot.guilds.fetch({ guild: guildId, withCounts: false }).catch(() => null);
           let serverData = fs.readFileSync(join(__dirname, "../", "data", "servers.json"), "utf-8");
@@ -317,12 +334,28 @@ module.exports = {
             return console.log(`[DBM Dashboard] Error parsing servers.json: ${e}`);
           }
 
+          let roles, channels;
+          if (include.some(i => ["textChannels", "voiceChannels", "categories"].includes(i)))
+            channels = await guild.channels.fetch().catch(() => null);
+          if (include.includes("roles"))
+            roles = await guild.roles.fetch().catch(() => null);
+
+          const textChannels = channels ? channels.filter(c => c.type === "GUILD_TEXT").map(c => { return { id: c.id, name: c.name, position: c.position } }) : [];
+          const voiceChannels = channels ? channels.filter(c => c.type === "GUILD_VOICE").map(c => { return { id: c.id, name: c.name, position: c.position } }) : [];
+          const categories = channels ? channels.filter(c => c.type === "GUILD_CATEGORY").map(c => { return { id: c.id, name: c.name, position: c.position } }) : [];
+
+          roles = roles ? roles.map(r => { return { id: r.id, name: r.name, position: r.position, managed: r.managed } }) : [];
+
           ws.send(JSON.stringify({
             op: OPCODES.REQUEST_GUILD_DATA,
             d: {
               interactionId,
               data: serverData[guildId] || {},
-              inGuild: !!guild
+              inGuild: !!guild,
+              ...(roles && { roles }),
+              ...(textChannels && { textChannels }),
+              ...(voiceChannels && { voiceChannels }),
+              ...(categories && { categories })
             }
           }));
         },
