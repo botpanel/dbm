@@ -336,9 +336,9 @@ module.exports = {
 
           let roles, channels;
           if (include.some(i => ["textChannels", "voiceChannels", "categories"].includes(i)))
-            channels = await guild.channels.fetch().catch(() => null);
+            channels = await guild?.channels.fetch().catch(() => null);
           if (include.includes("roles"))
-            roles = await guild.roles.fetch().catch(() => null);
+            roles = await guild?.roles.fetch().catch(() => null);
 
           const textChannels = channels ? channels.filter(c => c.type === "GUILD_TEXT").map(c => { return { id: c.id, name: c.name, position: c.position } }) : [];
           const voiceChannels = channels ? channels.filter(c => c.type === "GUILD_VOICE").map(c => { return { id: c.id, name: c.name, position: c.position } }) : [];
