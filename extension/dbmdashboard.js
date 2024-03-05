@@ -253,6 +253,7 @@ module.exports = {
     Bot.onReady = async function dashboardOnReady(...params) {
       const bot = DBM.Bot.bot;
       bot.dashboard = {};
+      let allowReconnect = true;
 
       console.log("[DBM Dashboard] Initialized.");
       let isReconnecting = false;
@@ -264,8 +265,10 @@ module.exports = {
         const timeout = setTimeout(() => {
           console.log("[DBM Dashboard] Connection timeout. Retrying...");
           ws.terminate();
-          isReconnecting = true;
-          setTimeout(connect, 5000);
+          if (allowReconnect) {
+            isReconnecting = true;
+            setTimeout(connect, 5000);
+          }
         }, 5000);
 
         ws.on("open", () => {
@@ -276,18 +279,21 @@ module.exports = {
 
         ws.on("close", () => {
           if (!isReconnecting) {
-            console.log("[DBM Dashboard] Connection closed. retrying...");
-            isReconnecting = true;
-            setTimeout(connect, 5000);
+            console.log("[DBM Dashboard] Connection closed.");
+            if (allowReconnect) {
+              isReconnecting = true;
+              setTimeout(connect, 5000);
+            }
           }
         });
 
         ws.on("error", (err) => {
           if (!isReconnecting) {
             console.log(`[DBM Dashboard] Error: ${err}`);
-            console.log("[DBM Dashboard] Retrying...");
-            isReconnecting = true;
-            setTimeout(connect, 5000);
+            if (allowReconnect) {
+              isReconnecting = true;
+              setTimeout(connect, 5000);
+            }
           }
         });
 
@@ -320,6 +326,7 @@ module.exports = {
           }, data.d.heartbeatInterval);
         },
         [OPCODES.ERROR]: ({ data }) => {
+          if (data.d.error === "Invalid websocket version. UPDATE EXTENSION.") allowReconnect = false;
           console.log(`[DBM Dashboard] Error: ${data.d.error}`);
         },
         [OPCODES.GUILD_INTERACTION]: async ({ data, ws }) => {
