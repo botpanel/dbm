@@ -254,6 +254,7 @@ module.exports = {
     Bot.onReady = async function dashboardOnReady(...params) {
       const bot = DBM.Bot.bot;
       bot.dashboard = {};
+      let allowReconnect = true;
 
       console.log("[DBM Dashboard] Initialized.");
       let isReconnecting = false;
@@ -265,8 +266,10 @@ module.exports = {
         const timeout = setTimeout(() => {
           console.log("[DBM Dashboard] Connection timeout. Retrying...");
           ws.terminate();
-          isReconnecting = true;
-          setTimeout(connect, 5000);
+          if (allowReconnect) {
+            isReconnecting = true;
+            setTimeout(connect, 5000);
+          }
         }, 5000);
 
         ws.on("open", () => {
@@ -277,18 +280,21 @@ module.exports = {
 
         ws.on("close", () => {
           if (!isReconnecting) {
-            console.log("[DBM Dashboard] Connection closed. retrying...");
-            isReconnecting = true;
-            setTimeout(connect, 5000);
+            console.log("[DBM Dashboard] Connection closed.");
+            if (allowReconnect) {
+              isReconnecting = true;
+              setTimeout(connect, 5000);
+            }
           }
         });
 
         ws.on("error", (err) => {
           if (!isReconnecting) {
             console.log(`[DBM Dashboard] Error: ${err}`);
-            console.log("[DBM Dashboard] Retrying...");
-            isReconnecting = true;
-            setTimeout(connect, 5000);
+            if (allowReconnect) {
+              isReconnecting = true;
+              setTimeout(connect, 5000);
+            }
           }
         });
 
@@ -321,7 +327,7 @@ module.exports = {
           }, data.d.heartbeatInterval);
         },
         [OPCODES.ERROR]: ({ data }) => {
-          console.log(`[DBM Dashboard] Error: ${data.d.error}`);
+          if (data.d.error === "Invalid websocket version. UPDATE EXTENSION.") allowReconnect = false;
         },
         [OPCODES.GUILD_INTERACTION]: async ({ data, ws }) => {
           const { guildId, interactionId, include } = data.d;
@@ -337,9 +343,9 @@ module.exports = {
 
           let roles, channels;
           if (include.some(i => ["textChannels", "voiceChannels", "categories"].includes(i)))
-            channels = await guild.channels.fetch().catch(() => null);
+            channels = await guild?.channels.fetch().catch(() => null);
           if (include.includes("roles"))
-            roles = await guild.roles.fetch().catch(() => null);
+            roles = await guild?.roles.fetch().catch(() => null);
 
           const textChannels = channels ? channels.filter(c => c.type === "GUILD_TEXT").map(c => { return { id: c.id, name: c.name, position: c.position } }) : [];
           const voiceChannels = channels ? channels.filter(c => c.type === "GUILD_VOICE").map(c => { return { id: c.id, name: c.name, position: c.position } }) : [];
