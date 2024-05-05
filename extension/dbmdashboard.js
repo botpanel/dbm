@@ -147,9 +147,30 @@ module.exports = {
       <div class="box">
         <h3 class="title">Authentication</h3>
         <p class="text">Please enter your application id and secret into the boxes below</p>
+        
         <input id="applicationId" class="input" type="text" placeholder="Application ID">
         <input id="applicationSecret" class="input" type="password" placeholder="Application Secret">
-        <input type="button" class="button" value="Save" id="saveButton">
+        
+        <input type="button" class="button" value="Save Configuration" id="saveButton">
+      </div>
+      
+      <div style="w-full; height: 1px; background-color: white; margin: 10px;"></div>
+      
+      <div class="box">
+        <h1 class="title">Developer Options</h1>
+        
+        <h3 class="title" style="margin-top: 10px;">WebSocket URL</h3>
+        <p class="text">For development purposes only. Do not edit this value.</p>
+        <input id="websocketUrl" class="input" type="text" placeholder="WebSocket URL">
+        
+        <h3 class="title" style="margin-top: 10px;">Debug Mode</h3>
+        <p class="text">Enable or disable debug logging.</p>
+        <select id="debugMode" class="input">
+          <option value="1">Enable</option>
+          <option value="0">Disable</option>
+        </select>
+        
+        <input type="button" class="button" value="Save Development Options" id="devSaveButton">
       </div>
     </div>
     `
@@ -167,31 +188,75 @@ module.exports = {
     const secret = document.getElementById("applicationSecret");
     const id = document.getElementById("applicationId");
 
+    const websocketUrl = document.getElementById("websocketUrl");
+    const debugMode = document.getElementById("debugMode");
+
     const error = document.getElementById("error");
     const message = document.getElementById("message");
 
     if (fs.existsSync(join(__dirname, "../", "dashboard-config.json"))) {
-      const data = JSON.parse(fs.readFileSync(join(__dirname, "../", "dashboard-config.json"), 'utf-8'));
+      const data = JSON.parse(fs.readFileSync(join(__dirname, "../", "dashboard-config.json"), "utf-8"));
       secret.value = data.secret || "";
       id.value = data.id || "";
+
+      websocketUrl.value = data.websocketUrl || "wss://wss.botpanel.xyz";
+      debugMode.value = data.debugMode || "0";
     }
 
-    document.getElementById("saveButton").addEventListener("click", () => {
-      if (!secret.value || !id.value) {
-        error.innerText = "Please enter a valid application id and secret.";
+    document.getElementById("devSaveButton").addEventListener("click", () => {
+      if (!websocketUrl.value) {
+        error.innerText = "Please ensure all fields have a value.";
         error.parentElement.style.display = "block";
         return;
       }
 
-      const data = {
-        secret: secret.value,
-        id: id.value
-      };
+      const writeObject = {};
 
-      fs.writeFileSync(join(__dirname, "../", "dashboard-config.json"), JSON.stringify(data));
+      const currentData = fs.readFileSync(join(__dirname, "../", "dashboard-config.json"), "utf-8");
+      if (currentData) {
+        const parsedData = JSON.parse(currentData);
+        for (const key in parsedData) {
+          if (parsedData.hasOwnProperty(key)) {
+            writeObject[key] = parsedData[key];
+          }
+        }
+      }
+
+      writeObject.websocketUrl = websocketUrl.value;
+      writeObject.debugMode = debugMode.value;
+
+      fs.writeFileSync(join(__dirname, "../", "dashboard-config.json"), JSON.stringify(writeObject));
 
       error.parentElement.style.display = "none";
+      message.innerText = "Saved!";
+      message.parentElement.style.display = "block";
+    });
 
+    document.getElementById("saveButton").addEventListener("click", () => {
+      if (!secret.value || !id.value) {
+        error.innerText = "Please ensure all fields have a value.";
+        error.parentElement.style.display = "block";
+        return;
+      }
+
+      const writeObject = {};
+
+      const currentData = fs.readFileSync(join(__dirname, "../", "dashboard-config.json"), "utf-8");
+      if (currentData) {
+        const parsedData = JSON.parse(currentData);
+        for (const key in parsedData) {
+          if (parsedData.hasOwnProperty(key)) {
+            writeObject[key] = parsedData[key];
+          }
+        }
+      }
+
+      writeObject.secret = secret.value;
+      writeObject.id = id.value;
+
+      fs.writeFileSync(join(__dirname, "../", "dashboard-config.json"), JSON.stringify(writeObject));
+
+      error.parentElement.style.display = "none";
       message.innerText = "Saved!";
       message.parentElement.style.display = "block";
     });
@@ -224,8 +289,6 @@ module.exports = {
   //---------------------------------------------------------------------
 
   mod: async function (DBM) {
-    const debug = false;
-    const devMode = false;
     const WebSocket = require("ws");
     const { Bot, Events } = DBM;
     const { onReady } = Bot;
@@ -240,31 +303,39 @@ module.exports = {
       HEARTBEAT: 8,
     };
 
-    let applicationId, applicationSecret;
+    const log = ({ message, isErr = false }) => {
+      console.log(`[${isErr ? "BotPanel Error" : "BotPanel"}] (${new Date().toLocaleString()}) - ${message}`);
+    }
+
+    let applicationId, applicationSecret, debug, wssURL;
     const config = join(__dirname, "../", "dashboard-config.json");
 
     if (config) {
       const data = require(config);
       applicationId = data.id;
       applicationSecret = data.secret;
+      debug = data.debugMode === "1";
+      wssURL = data.websocketUrl;
+    } else {
+      return log({ message: "No configuration file found. Please configure the extension.", isErr: true });
     }
 
-    console.log("[DBM Dashboard] Waiting for bot to start...");
+    log({ message: "Loaded configuration, waiting for bot to start." });
 
     Bot.onReady = async function dashboardOnReady(...params) {
       const bot = DBM.Bot.bot;
       bot.dashboard = {};
       let allowReconnect = true;
 
-      console.log("[DBM Dashboard] Initialized.");
+      log({ message: "Mounted." });
       let isReconnecting = false;
 
       const connect = () => {
-        console.log("[DBM Dashboard] Connecting to dashboard...");
-        const ws = new WebSocket(devMode ? "ws://127.0.0.1:3001/api/ws" : "wss://wss.botpanel.xyz/");
+        log({ message: "Attempting to connect to dashboard..." });
+        const ws = new WebSocket(wssURL);
 
         const timeout = setTimeout(() => {
-          console.log("[DBM Dashboard] Connection timeout. Retrying...");
+          log({ message: "Failed to connect to dashboard. Retrying in 5 seconds..." });
           ws.terminate();
           if (allowReconnect) {
             isReconnecting = true;
@@ -273,14 +344,14 @@ module.exports = {
         }, 5000);
 
         ws.on("open", () => {
-          console.log("[DBM Dashboard] Connected to dashboard.");
+          log({ message: "Connected to dashboard." });
           clearTimeout(timeout);
           isReconnecting = false;
         });
 
         ws.on("close", () => {
           if (!isReconnecting) {
-            console.log("[DBM Dashboard] Connection closed.");
+            log({ message: "Disconnected from dashboard." });
             if (allowReconnect) {
               isReconnecting = true;
               setTimeout(connect, 5000);
@@ -290,7 +361,7 @@ module.exports = {
 
         ws.on("error", (err) => {
           if (!isReconnecting) {
-            console.log(`[DBM Dashboard] Error: ${err}`);
+            log({ message: `Error connecting to dashboard: ${err}`, isErr: true });
             if (allowReconnect) {
               isReconnecting = true;
               setTimeout(connect, 5000);
@@ -301,14 +372,21 @@ module.exports = {
         ws.on("message", (message) => handleMessage(message, ws));
 
         bot.dashboard.ws = ws;
+
+        bot.dashboard.ws.sendPacket = ({ op, d }) => {
+          if (!Bot.bot.dashboard.ws) return log({ message: "Attempted to send packet before connection was established.", isErr: true });
+          Bot.bot.dashboard.ws.send(JSON.stringify({ op, d }));
+          if(debug)
+            log({ message: `TX: ${JSON.stringify({ op, d })}` });
+        }
       }
 
       connect();
 
       const operationHandlers = {
         [OPCODES.AUTHENTICATE]: ({ applicationId, applicationSecret }) => {
-          console.log("[DBM Dashboard] Attempting to authenticate...");
-          bot.dashboard.ws.send(JSON.stringify({
+          log({ message: "Authenticating with dashboard..." });
+          bot.dashboard.ws.sendPacket({
             op: OPCODES.AUTHENTICATE,
             d: {
               connectAs: "application",
@@ -316,10 +394,10 @@ module.exports = {
               applicationSecret,
               version: "1.0.0"
             }
-          }));
+          });
         },
         [OPCODES.AUTH_SUCCESS]: ({ data, ws }) => {
-          console.log(`[DBM Dashboard] Successfully authenticated with application "${data.d.name}" (${applicationId})!`);
+          log({ message: `Successfully authenticated with application "${data.d.name}" (${applicationId})!` });
           setInterval(() => {
             ws.send(JSON.stringify({
               op: OPCODES.HEARTBEAT
@@ -338,7 +416,7 @@ module.exports = {
           try {
             serverData = JSON.parse(serverData);
           } catch (e) {
-            return console.log(`[DBM Dashboard] Error parsing servers.json: ${e}`);
+            return log({ message: `Error parsing server data: ${e}`, isErr: true });
           }
 
           let roles, channels;
@@ -374,14 +452,14 @@ module.exports = {
       const handleMessage = async (message, ws) => {
         const data = JSON.parse(message);
         if (debug)
-          console.log(`[DBM Dashboard] Received message: ${message}`);
+          log({ message: `RX: ${JSON.stringify(data)}` });
 
         const handler = operationHandlers[data.op];
         if (handler) {
           try {
             await handler({ data, ws, applicationId, applicationSecret });
           } catch (e) {
-            console.log(`[DBM Dashboard] Error handling message: ${e}`);
+            log({ message: `Error handling operation ${data.op}: ${e}`, isErr: true });
           }
         }
       }
