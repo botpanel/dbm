@@ -40,8 +40,7 @@ module.exports = {
     const bot = this.getDBM().Bot.bot;
     const ws = bot.dashboard.ws;
 
-    await new Promise((resolve) => {
-      ws.send(JSON.stringify({
+    ws.sendPacket({
         op: 7,
         d: {
           interactionId: interaction.interactionId,
@@ -49,8 +48,7 @@ module.exports = {
           key: interaction.varname,
           value: interaction.data
         }
-      }), resolve);
-    })
+    });
 
     this.callNextAction(cache);
   },
