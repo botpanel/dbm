@@ -290,6 +290,7 @@ module.exports = {
 
   mod: async function (DBM) {
     const WebSocket = require("ws");
+    const WS_VERSION = "1.1.0";
     const { Bot, Events } = DBM;
     const { onReady } = Bot;
 
@@ -392,7 +393,7 @@ module.exports = {
               connectAs: "application",
               applicationId,
               applicationSecret,
-              version: "1.0.0"
+              version: WS_VERSION
             }
           });
         },

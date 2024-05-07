@@ -11,7 +11,7 @@ module.exports = {
 
   meta: { version: "2.1.7", preciseCheck: true, author: null, authorUrl: null, downloadUrl: null },
 
-  fields: ["sourceInteraction", "varName", "success"],
+  fields: ["sourceInteraction", "varName", "success", "message"],
 
   html(isEvent, data) {
     return `
@@ -23,6 +23,8 @@ module.exports = {
         <option value="true" selected>True</option>
         <option value="false">False</option>
       </select>
+      <span class="dbminputlabel">Message</span>
+      <input id="message" class="round" type="text">  
     </div>
     `;
   },
@@ -32,6 +34,7 @@ module.exports = {
 
     const varName = this.evalMessage(data.varName, cache);
     const success = data.success === "true";
+    const message = data.message;
 
     const interaction = this.getVariable(parseInt(data.sourceInteraction, 10), varName, cache);
     if(!interaction )
@@ -45,6 +48,7 @@ module.exports = {
         d: {
           interactionId: interaction.interactionId,
           success,
+          message,
           key: interaction.varname,
           value: interaction.data
         }
