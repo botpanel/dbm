@@ -316,7 +316,7 @@ module.exports = {
       applicationId = data.id;
       applicationSecret = data.secret;
       debug = data.debugMode === "1";
-      wssURL = data.websocketUrl;
+      wssURL = data.websocketUrl || "wss://wss.botpanel.xyz";
     } else {
       return log({ message: "No configuration file found. Please configure the extension.", isErr: true });
     }
