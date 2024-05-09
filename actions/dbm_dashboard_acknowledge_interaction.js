@@ -23,6 +23,7 @@ module.exports = {
         <option value="true" selected>True</option>
         <option value="false">False</option>
       </select>
+      <br>
       <span class="dbminputlabel">Message</span>
       <input id="message" class="round" type="text">  
     </div>
