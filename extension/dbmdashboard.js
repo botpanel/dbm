@@ -400,9 +400,9 @@ module.exports = {
         [OPCODES.AUTH_SUCCESS]: ({ data, ws }) => {
           log({ message: `Successfully authenticated with application "${data.d.name}" (${applicationId})!` });
           setInterval(() => {
-            ws.send(JSON.stringify({
+            bot.dashboard.ws.sendPacket({
               op: OPCODES.HEARTBEAT
-            }));
+            });
           }, data.d.heartbeatInterval);
         },
         [OPCODES.ERROR]: ({ data }) => {
@@ -432,7 +432,7 @@ module.exports = {
 
           roles = roles ? roles.map(r => { return { id: r.id, name: r.name, position: r.position, managed: r.managed } }) : [];
 
-          ws.send(JSON.stringify({
+          bot.dashboard.ws.sendPacket({
             op: OPCODES.REQUEST_GUILD_DATA,
             d: {
               interactionId,
@@ -443,7 +443,7 @@ module.exports = {
               ...(voiceChannels && { voiceChannels }),
               ...(categories && { categories })
             }
-          }));
+          });
         },
         [OPCODES.MODIFY_GUILD_DATA]: ({ data }) => {
           Events.dbmDashboardDataUpdate(data.d);
