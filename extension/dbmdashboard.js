@@ -211,6 +211,8 @@ module.exports = {
       }
 
       const writeObject = {};
+      const filePath = join(__dirname, "../", "dashboard-config.json");
+      const dirPath = join(__dirname, "../");
 
       const currentData = fs.readFileSync(join(__dirname, "../", "dashboard-config.json"), "utf-8");
       if (currentData) {
@@ -225,7 +227,8 @@ module.exports = {
       writeObject.websocketUrl = websocketUrl.value;
       writeObject.debugMode = debugMode.value;
 
-      fs.writeFileSync(join(__dirname, "../", "dashboard-config.json"), JSON.stringify(writeObject));
+      if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+      fs.writeFileSync(filePath, JSON.stringify(writeObject));
 
       error.parentElement.style.display = "none";
       message.innerText = "Saved!";
@@ -241,12 +244,17 @@ module.exports = {
 
       const writeObject = {};
 
-      const currentData = fs.readFileSync(join(__dirname, "../", "dashboard-config.json"), "utf-8");
-      if (currentData) {
-        const parsedData = JSON.parse(currentData);
-        for (const key in parsedData) {
-          if (parsedData.hasOwnProperty(key)) {
-            writeObject[key] = parsedData[key];
+      const filePath = join(__dirname, "../", "dashboard-config.json");
+      const dirPath = join(__dirname, "../");
+
+      if (fs.existsSync(filePath)) {
+        const currentData = fs.readFileSync(filePath, "utf-8");
+        if (currentData) {
+          const parsedData = JSON.parse(currentData);
+          for (const key in parsedData) {
+            if (parsedData.hasOwnProperty(key)) {
+              writeObject[key] = parsedData[key];
+            }
           }
         }
       }
@@ -254,7 +262,8 @@ module.exports = {
       writeObject.secret = secret.value;
       writeObject.id = id.value;
 
-      fs.writeFileSync(join(__dirname, "../", "dashboard-config.json"), JSON.stringify(writeObject));
+      if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+      fs.writeFileSync(filePath, JSON.stringify(writeObject));
 
       error.parentElement.style.display = "none";
       message.innerText = "Saved!";
