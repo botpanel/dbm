@@ -13,6 +13,7 @@ module.exports = {
       "New Value",
       "User ID",
       "Input Type",
+      "Section Header",
     ];
     return `${presets.getVariableText(data.sourceInteraction, data.varName)} - ${info[parseInt(data.info, 10)]}`;
   },
@@ -30,19 +31,31 @@ module.exports = {
         dataType = "String";
         break;
       case 2:
+        dataType = "Server ID";
+        break;
+      case 3:
         dataType = "String";
         break;
       case 4:
-        dataType = "String";
+        dataType = "User ID";
         break;
       case 5:
+        dataType = "String";
+        break;
+      case 6:
         dataType = "String";
         break;
     }
     return [data.varName2, dataType];
   },
 
-  meta: { version: "2.1.7", preciseCheck: true, author: null, authorUrl: null, downloadUrl: null },
+  meta: {
+    version: "2.1.7",
+    preciseCheck: true,
+    author: null,
+    authorUrl: null,
+    downloadUrl: null,
+  },
 
   fields: ["sourceInteraction", "varName", "info", "storage", "varName2"],
 
@@ -61,6 +74,7 @@ module.exports = {
         <option value="3">New Value</option>
         <option value="4">User ID</option>
         <option value="5">Input Type</option>
+        <option value="6">Section Header</option>
       </select>
     </div>
 
@@ -77,9 +91,12 @@ module.exports = {
     const varName2 = this.evalMessage(data.varName2, cache);
     const storage = parseInt(data.storage, 10);
 
-    const interaction = this.getVariable(parseInt(data.sourceInteraction, 10), varName, cache);
-    if (!interaction)
-      return this.callNextAction(cache);
+    const interaction = this.getVariable(
+      parseInt(data.sourceInteraction, 10),
+      varName,
+      cache,
+    );
+    if (!interaction) return this.callNextAction(cache);
 
     switch (info) {
       case 0:
@@ -99,6 +116,9 @@ module.exports = {
         break;
       case 5:
         this.storeValue(interaction.inputType, storage, varName2, cache);
+        break;
+      case 6:
+        this.storeValue(interaction.sectionHeader, storage, varName2, cache);
         break;
     }
 
