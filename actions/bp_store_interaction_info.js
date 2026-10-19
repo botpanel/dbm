@@ -1,5 +1,5 @@
 module.exports = {
-  name: "Store DBM Dashboard Interaction Info",
+  name: "Store Dashboard Interaction Info",
 
   displayName: "Store Dashboard Interaction Info",
 
