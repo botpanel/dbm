@@ -13,12 +13,12 @@ This is the setup guide for using [Bot Panel](https://botpanel.xyz) with [Discor
 5. Complete all fields.
 6. Download the files from the [/actions](https://github.com/botpanel/dbm/tree/main/actions) directory and place them in your project's `actions` folder.
 7. Download the files from the [/events](https://github.com/botpanel/dbm/tree/main/events) directory and place them in your project's `events` folder.
-8. Download the extension from the [/extension](https://github.com/botpanel/dbm/tree/main/extension) directory and place it in your project's `extensions` folder.
-9. Make sure you have restarted DBM after downloading and installing these mods.
-10. From the developer dashboard, take note of your application id and application secret. Do not share your secret with others.
-11. In your DBM project, in the application navigation menu click the `Extensions` dropdown, and select `DBM Dashboard`.
-12. Copy and paste your application id and secret into the field, and hit `Save`.
-13. From this point to see if everything is configured properly, restart your bot and open your console. You should see the message `[Bot Panel] Successfully authenticated with application "APPLICATION_NAME" (APPLICATION_ID)!`
+8. Download the extension from the [/extensions](https://github.com/botpanel/dbm/tree/main/extensions) directory and place it in your project's `extensions` folder.
+9. Make sure you have reloaded mods or restarted DBM after downloading and installing these mods.
+10. From the Bot Panel developer dashboard, take note of your application id and application secret. Do not share your secret with others.
+11. In your DBM project, in the application navigation menu click the `Extensions` dropdown, and select `Bot Panel`.
+12. Copy and paste your application id and secret into the field, and hit `Save and Exit`.
+13. From this point to see if everything is configured properly, save and restart your bot and open your console. You should see the message `[Bot Panel] Successfully authenticated with application "APPLICATION_NAME" (APPLICATION_ID)!`
 14. Set up data receive event (Read below)
 
 # Receiving Data
