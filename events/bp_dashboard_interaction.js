@@ -1,5 +1,5 @@
 module.exports = {
-  name: "DBM Dashboard Data Changed",
+  name: "Bot Panel Dashboard Data Changed",
   isEvent: true,
 
   fields: ["Interaction (Temporary Variable Name)"],
@@ -9,9 +9,9 @@ module.exports = {
     const { Bot, Actions } = DBM;
 
     DBM.Events.dbmDashboardDataUpdate = function dbmDashboardDataUpdate(data) {
-      if (!Bot.$evts["DBM Dashboard Data Changed"]) return;
+      if (!Bot.$evts["Bot Panel Dashboard Data Changed"] && !Bot.$evts["DBM Dashboard Data Changed"]) return;
 
-      for (const event of Bot.$evts["DBM Dashboard Data Changed"]) {
+      for (const event of [...Bot.$evts["Bot Panel Dashboard Data Changed"], ...Bot.$evts["DBM Dashboard Data Changed"]]) {
         const temp = {};
         if(event.temp) temp[event.temp] = data;
 

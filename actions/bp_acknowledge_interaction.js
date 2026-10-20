@@ -3,7 +3,7 @@ module.exports = {
 
   displayName: "Acknowledge Dashboard Interaction",
 
-  section: "DBM Dashboard",
+  section: "Bot Panel",
 
   subtitle(data, presets) {
     return `${presets.getVariableText(data.sourceInteraction, data.varName)}`;
@@ -25,7 +25,7 @@ module.exports = {
       </select>
       <br>
       <span class="dbminputlabel">Message</span>
-      <input id="message" class="round" type="text">  
+      <input id="message" class="round" type="text">
     </div>
     `;
   },
