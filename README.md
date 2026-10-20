@@ -1,4 +1,5 @@
 # Bot Panel w/ Discord Bot Maker Integration Guide
+
 This is the setup guide for using [Bot Panel](https://botpanel.xyz) with [Discord Bot Maker](https://store.steampowered.com/app/682130/Discord_Bot_Maker/).
 
 # Installation
@@ -9,22 +10,79 @@ This is the setup guide for using [Bot Panel](https://botpanel.xyz) with [Discor
 4. Navigate to the `Manage Applications` page and click `Add Application`.
    <br><br>
    ![Image](https://github.com/botpanel/dbm/blob/50804e145d2b6f663523fa12399537dca0b600c6/.github/botpanel_dbm_step1.png?raw=true)
-6. Complete all fields.
-7. Download the files from the [/actions](https://github.com/botpanel/dbm/tree/main/actions) directory and place them in your project's `actions` folder.
-8. Download the files from the [/events](https://github.com/botpanel/dbm/tree/main/events) directory and place them in your project's `events` folder.
-9. Download the extension from the [/extension](https://github.com/botpanel/dbm/tree/main/extension) directory and place it in your project's `extensions` folder.
-10. Make sure you have restarted DBM after downloading and installing these mods.
-11. From the developer dashboard, take note of your application id and application secret. Do not share your secret with others.
-12. In your DBM project, in the application navigation menu click the `Extensions` dropdown, and select `DBM Dashboard`.
-13. Copy and paste your application id and secret into the field, and hit `Save`.
-14. From this point to see if everything is configured properly, restart your bot and open your console. You should see the message `[DBM Dashboard] Successfully authenticated with application "APPLICATION_NAME" (APPLICATION_ID)!`
-15. Set up data receive event (Read below)
+5. Complete all fields.
+6. Download the files from the [/actions](https://github.com/botpanel/dbm/tree/main/actions) directory and place them in your project's `actions` folder.
+7. Download the files from the [/events](https://github.com/botpanel/dbm/tree/main/events) directory and place them in your project's `events` folder.
+8. Download the extension from the [/extension](https://github.com/botpanel/dbm/tree/main/extension) directory and place it in your project's `extensions` folder.
+9. Make sure you have restarted DBM after downloading and installing these mods.
+10. From the developer dashboard, take note of your application id and application secret. Do not share your secret with others.
+11. In your DBM project, in the application navigation menu click the `Extensions` dropdown, and select `DBM Dashboard`.
+12. Copy and paste your application id and secret into the field, and hit `Save`.
+13. From this point to see if everything is configured properly, restart your bot and open your console. You should see the message `[Bot Panel] Successfully authenticated with application "APPLICATION_NAME" (APPLICATION_ID)!`
+14. Set up data receive event (Read below)
 
 # Receiving Data
 
-When a user modifies data on their dashboard, an interaction is sent from our server to your bot, much alike how discord interactions work. This interaction stores data such as the variable name, data, etc. **You must acknowledge every request for it to be marked as successful on your user's dashboard.** To do this create an event on your bot using the `DBM Dashboard Data Changed` event. This event has one temporary variable input, which is the `Interaction Object`, and is fired every time a user submits a data change request from their dashboard. When you receive this request, you can use the `Store Dashboard Interaction Info` action to store all necessary data and make changes to your bot's backend storage. Once all data changes have been made, make sure to acknowledge the interaction using the `Acknowledge Dashboard Interaction` action.
+When a user modifies data on their dashboard, an interaction is sent from our server to your bot, much alike how discord interactions work. This interaction stores data such as the variable name, data, etc. **You must acknowledge every request for it to be marked as successful on your user's dashboard.** To do this create an event on your bot using the `Bot Panel Dashboard Data Changed` event. This event has one temporary variable input, which is the `Interaction Object`, and is fired every time a user submits a data change request from their dashboard. When you receive this request, you can use the `Store Dashboard Interaction Info` action to store all necessary data and make changes to your bot's backend storage. Once all data changes have been made, make sure to acknowledge the interaction using the `Acknowledge Dashboard Interaction` action.
 
-An example rawdata doing all of the above using DBM's built in server data database can be found [here](https://rawdata.dbm-network.org/raw-data/1535).
+Below is an example rawdata doing all of the above using DBM's built in server data database:
+
+```json
+{
+  "name": "Bot Panel Data Changed",
+  "temp": "interaction",
+  "event-type": "Bot Panel Dashboard Data Changed",
+  "_id": "nYdmP",
+  "actions": [
+    {
+      "sourceInteraction": "1",
+      "varName": "interaction",
+      "info": "0",
+      "storage": "1",
+      "varName2": "interactionId",
+      "name": "Store Dashboard Interaction Info"
+    },
+    {
+      "sourceInteraction": "1",
+      "varName": "interaction",
+      "info": "1",
+      "storage": "1",
+      "varName2": "variableName",
+      "name": "Store Dashboard Interaction Info"
+    },
+    {
+      "sourceInteraction": "1",
+      "varName": "interaction",
+      "info": "2",
+      "storage": "1",
+      "varName2": "guildId",
+      "name": "Store Dashboard Interaction Info"
+    },
+    {
+      "sourceInteraction": "1",
+      "varName": "interaction",
+      "info": "3",
+      "storage": "1",
+      "varName2": "newValue",
+      "name": "Store Dashboard Interaction Info"
+    },
+    {
+      "server": "101",
+      "varName": "${tempVars(\"guildId\")}",
+      "dataName": "${tempVars(\"variableName\")}",
+      "changeType": "0",
+      "value": "tempVars(\"newValue\")",
+      "name": "Control Server Data"
+    },
+    {
+      "sourceInteraction": "1",
+      "varName": "interaction",
+      "success": "true",
+      "name": "DBM Dashboard Acknowledge Interaction"
+    }
+  ]
+}
+```
 
 # Editing Your User Dashboard
 
