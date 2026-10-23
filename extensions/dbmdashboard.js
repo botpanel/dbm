@@ -56,25 +56,25 @@ module.exports = {
 
   defaultFields: {},
 
-    //---------------------------------------------------------------------
-    // Extension Dialog Size
-    //
-    // Returns the size of the extension dialog.
-    //---------------------------------------------------------------------
+  //---------------------------------------------------------------------
+  // Extension Dialog Size
+  //
+  // Returns the size of the extension dialog.
+  //---------------------------------------------------------------------
 
-    size: function () {
-      return { width: 500, height: 500 };
-    },
+  size: function () {
+    return { width: 500, height: 500 };
+  },
 
-    //---------------------------------------------------------------------
-    // Extension HTML
-    //
-    // This function returns a string containing the HTML used for
-    // the context menu dialog.
-    //---------------------------------------------------------------------
+  //---------------------------------------------------------------------
+  // Extension HTML
+  //
+  // This function returns a string containing the HTML used for
+  // the context menu dialog.
+  //---------------------------------------------------------------------
 
-    html: function (data) {
-      return /* html */ `
+  html: function (data) {
+    return /* html */ `
       <!-- Keep this here so intellij editors can recognize this as jsx and enable syntax highlighting. -->
       <div a={}></div>
       <style>
@@ -209,99 +209,99 @@ module.exports = {
       </div>
       </div>
       `;
-    },
+  },
 
-    //---------------------------------------------------------------------
-    // Extension Dialog Init Code
-    //
-    // When the HTML is first applied to the extension dialog, this code
-    // is also run. This helps add modifications or setup reactionary
-    // functions for the DOM elements.
-    //---------------------------------------------------------------------
+  //---------------------------------------------------------------------
+  // Extension Dialog Init Code
+  //
+  // When the HTML is first applied to the extension dialog, this code
+  // is also run. This helps add modifications or setup reactionary
+  // functions for the DOM elements.
+  //---------------------------------------------------------------------
 
-    init: function (document, globalObject) {
-      varValueTable = {};
+  init: function (document, globalObject) {
+    varValueTable = {};
 
-      secret = document.getElementById("applicationSecret");
-      id = document.getElementById("applicationId");
+    secret = document.getElementById("applicationSecret");
+    id = document.getElementById("applicationId");
 
-      websocketUrl = document.getElementById("websocketUrl");
-      debugMode = document.getElementById("debugMode");
+    websocketUrl = document.getElementById("websocketUrl");
+    debugMode = document.getElementById("debugMode");
 
-      // debugMode.value = data.websocketUrl ?? "";
+    // debugMode.value = data.websocketUrl ?? "";
 
-      varSelectType = document.getElementById("varSelectType");
-      varInput = document.getElementById("var_Input");
-      varTempVar = document.getElementById("var_tempvar");
+    varSelectType = document.getElementById("varSelectType");
+    varInput = document.getElementById("var_Input");
+    varTempVar = document.getElementById("var_tempvar");
 
-      $("#varSelectType").val(varSelectType.getAttribute("initvalue"));
-      $("#debugMode").val(debugMode.getAttribute("initvalue"));
+    $("#varSelectType").val(varSelectType.getAttribute("initvalue"));
+    $("#debugMode").val(debugMode.getAttribute("initvalue"));
+    updateVarInput();
+
+    const error = document.getElementById("error");
+    const message = document.getElementById("message");
+
+    function importLegacyConfig(filePath, callback) {
+      let data;
+      try {
+        data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      } catch (e) {
+        error.innerHTML = "Failed to import config file.";
+        error.parentElement.style.display = "block";
+        console.log("Failed to load config.", e);
+        return;
+      }
+      secret.value = data.secret || "";
+      id.value = data.id || "";
+
+      $("#debugMode").val(data.debugMode || "0");
+      websocketUrl.value = data.websocketUrl || "wss://wss.botpanel.xyz";
+
+      $("#varSelectType").val(data.varSelectType || "0");
+      varInput.value = data.varInput || "";
+      varTempVar.value = data.varTempVar || "";
+
       updateVarInput();
 
-      const error = document.getElementById("error");
-      const message = document.getElementById("message");
+      varValueTable[varSelectType.value] = varInput.value;
 
-      function importLegacyConfig(filePath, callback) {
-        let data;
-        try {
-          data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-        } catch (e) {
-          error.innerHTML = "Failed to import config file.";
-          error.parentElement.style.display = "block";
-          console.log("Failed to load config.", e);
-          return;
-        }
-        secret.value = data.secret || "";
-        id.value = data.id || "";
-
-        $("#debugMode").val(data.debugMode || "0");
-        websocketUrl.value = data.websocketUrl || "wss://wss.botpanel.xyz";
-
-        $("#varSelectType").val(data.varSelectType || "0");
-        varInput.value = data.varInput || "";
-        varTempVar.value = data.varTempVar || "";
-
-        updateVarInput();
-
-        varValueTable[varSelectType.value] = varInput.value;
-
-        message.parentElement.style.display = "block";
-        message.innerHTML =
+      message.parentElement.style.display = "block";
+      message.innerHTML =
         "Config imported! Remember to save your project file.";
 
-        if (callback) {
-          callback();
-        }
+      if (callback) {
+        callback();
       }
+    }
 
-      function updateVarInput() {
-        const div_input = document.getElementById("div-var_Input");
-        const div_tempvar = document.getElementById("div-var_tempvar");
-        const varNote = document.getElementById("varNote");
-        div_input.style = "display:none";
-        div_tempvar.style = "display:none";
-        varNote.style = "display:none";
-        varSelectType.style = "";
-        if (varSelectType.value >= 1) {
-          div_input.style = "";
-          varSelectType.style = "width: 60%";
-          if (varSelectType.value == 1 || varSelectType.value == 2)
-            varInput.placeholder = "Variable name";
-          if (varSelectType.value == 3)
-            ((varInput.placeholder = "ID"),
-             (div_tempvar.style = ""),
-             (varNote.style = ""));
-        }
+    function updateVarInput() {
+      const div_input = document.getElementById("div-var_Input");
+      const div_tempvar = document.getElementById("div-var_tempvar");
+      const varNote = document.getElementById("varNote");
+      div_input.style = "display:none";
+      div_tempvar.style = "display:none";
+      varNote.style = "display:none";
+      varSelectType.style = "";
+      if (varSelectType.value >= 1) {
+        div_input.style = "";
+        varSelectType.style = "width: 60%";
+        if (varSelectType.value == 1 || varSelectType.value == 2)
+          varInput.placeholder = "Variable name";
+        if (varSelectType.value == 3)
+          ((varInput.placeholder = "ID"),
+            (div_tempvar.style = ""),
+            (varNote.style = ""));
       }
-      updateVarInput();
+    }
+    updateVarInput();
 
-      varSelectType.addEventListener("change", updateVarInput);
+    varSelectType.addEventListener("change", updateVarInput);
 
-      // detect old config
+    // detect old config
 
-      const legacyConfigPath = join(__dirname, "../", "dashboard-config.json");
-      if (fs.existsSync(legacyConfigPath)) {
-        message.innerHTML =
+    const legacyConfigPath = join(__dirname, "../", "dashboard-config.json");
+    if (fs.existsSync(legacyConfigPath)) {
+      message.innerHTML =
         "<b>Old config file found. Would you like to migrate it?";
       message.parentElement.style.display = "block";
       const yes = document.createElement("button");
@@ -344,299 +344,331 @@ module.exports = {
         });
         message.parentElement.style.display = "none";
       });
-      }
-    },
+    }
+  },
 
-    //---------------------------------------------------------------------
-    // Extension Dialog Close Code
-    //
-    // When the dialog is closed, this is called. Use it to save the data.
-    //---------------------------------------------------------------------
+  //---------------------------------------------------------------------
+  // Extension Dialog Close Code
+  //
+  // When the dialog is closed, this is called. Use it to save the data.
+  //---------------------------------------------------------------------
 
-    close: function (document, writeObject, globalObject) {
-      writeObject.secret = secret.value;
-      writeObject.id = id.value;
-      writeObject.varSelectType = varSelectType.value;
-      writeObject.varInput = varInput.value;
-      writeObject.varTempVar = varSelectType.value == 3 ? varTempVar.value : "";
-      writeObject.websocketUrl = websocketUrl.value;
-      writeObject.debugMode = debugMode.value;
-    },
+  close: function (document, writeObject, globalObject) {
+    writeObject.secret = secret.value;
+    writeObject.id = id.value;
+    writeObject.varSelectType = varSelectType.value;
+    writeObject.varInput = varInput.value;
+    writeObject.varTempVar = varSelectType.value == 3 ? varTempVar.value : "";
+    writeObject.websocketUrl = websocketUrl.value;
+    writeObject.debugMode = debugMode.value;
+  },
 
-    //---------------------------------------------------------------------
-    // Editor Extension Bot Mod
-    //
-    // Upon initialization of the bot, this code is run. Using the bot's
-    // DBM namespace, one can add/modify existing functions if necessary.
-    // In order to reduce conflicts between mods, be sure to alias
-    // functions you wish to overwrite.
-    //
-    // This is absolutely necessary for editor extensions since it
-    // allows us to setup modifications for the necessary functions
-    // we want to change.
-    //
-    // The client object can be retrieved from: `const bot = DBM.Bot.bot;`
-    // Classes can be retrieved also using it: `const { Actions, Event } = DBM;`
-    //---------------------------------------------------------------------
+  //---------------------------------------------------------------------
+  // Editor Extension Bot Mod
+  //
+  // Upon initialization of the bot, this code is run. Using the bot's
+  // DBM namespace, one can add/modify existing functions if necessary.
+  // In order to reduce conflicts between mods, be sure to alias
+  // functions you wish to overwrite.
+  //
+  // This is absolutely necessary for editor extensions since it
+  // allows us to setup modifications for the necessary functions
+  // we want to change.
+  //
+  // The client object can be retrieved from: `const bot = DBM.Bot.bot;`
+  // Classes can be retrieved also using it: `const { Actions, Event } = DBM;`
+  //---------------------------------------------------------------------
 
-    mod: async function (DBM) {
-      const WebSocket = require("ws");
-      const WS_VERSION = "1.2.1";
-      const { Bot, Events, Files } = DBM;
-      const { onReady } = Bot;
+  mod: async function (DBM) {
+    const WebSocket = require("ws");
+    const WS_VERSION = "1.2.1";
+    const { Bot, Events, Files } = DBM;
+    const { onReady } = Bot;
 
-      const OPCODES = {
-        AUTHENTICATE: 0,
-        AUTH_SUCCESS: 1,
-        ERROR: 2,
-        GUILD_INTERACTION: 4,
-        REQUEST_GUILD_DATA: 5,
-        MODIFY_GUILD_DATA: 6,
-        HEARTBEAT: 8,
-      };
+    const OPCODES = {
+      AUTHENTICATE: 0,
+      AUTH_SUCCESS: 1,
+      ERROR: 2,
+      GUILD_INTERACTION: 4,
+      REQUEST_GUILD_DATA: 5,
+      MODIFY_GUILD_DATA: 6,
+      HEARTBEAT: 8,
+    };
 
-      const log = ({ message, isErr = false }) => {
-        console.log(
-          `${isErr ? "\u001b[0;31m[BotPanel Error]\u001b[0m" : "[BotPanel]"} (${new Date().toLocaleString()}) - ${message}`,
-        );
-      };
+    const log = ({ message, isErr = false }) => {
+      console.log(
+        `${isErr ? "\u001b[0;31m[BotPanel Error]\u001b[0m" : "[BotPanel]"} (${new Date().toLocaleString()}) - ${message}`,
+      );
+    };
 
-      // log({ message: "Loaded configuration, waiting for bot to start." });
+    // log({ message: "Loaded configuration, waiting for bot to start." });
 
-      Bot.onReady = async function dashboardOnReady(...params) {
-        // load config
-        let applicationId, applicationSecret, debug, wssURL;
-        const config = Files?.data.settings?.["Bot Panel"];
+    Bot.onReady = async function dashboardOnReady(...params) {
+      // load config
+      let applicationId, applicationSecret, debug, wssURL;
+      const config = Files?.data.settings?.["Bot Panel"];
 
-        if (config) {
-          const data = config.customData?.["Bot Panel"];
-          applicationId = data.id;
-          applicationSecret = data.secret;
-          variableOptions = {
-            option: data.varSelectType,
-            input: data.varInput,
-            tempVar: data.varTempVar,
-          };
-          debug = data.debugMode === "1";
-          wssURL = data.websocketUrl || "wss://wss.botpanel.xyz";
-        } else {
-          return log({
-            message: "Bot Panel has not been configured.",
-            isErr: true,
-          });
-        }
-
-        const bot = DBM.Bot.bot;
-        bot.dashboard = {};
-        let allowReconnect = true;
-        let reconnectTime = 0;
-        let isReconnecting = false;
-        let heartbeat;
-
-        const connect = () => {
-          isReconnecting = false
-          log({ message: "Attempting to connect to dashboard..." });
-          const ws = new WebSocket(wssURL);
-
-          ws.on("open", () => {
-            log({ message: "Connected to dashboard." });
-            reconnectTime = 0;
-            isReconnecting = false;
-          });
-
-          ws.on("close", () => {
-            clearInterval(heartbeat);
-            if (!isReconnecting) {
-              log({ message: "Disconnected from dashboard." });
-              if (allowReconnect) {
-                reconnectTime += 5;
-                log({
-                  message: `Retrying in ${reconnectTime} seconds...`,
-                  isErr: true,
-                });
-                isReconnecting = true;
-                setTimeout(connect, reconnectTime * 1000);
-              }
-            }
-          });
-
-          ws.on("error", (err) => {
-            if (!isReconnecting) {
-              log({
-                message: `Error connecting to dashboard: ${err}`,
-                isErr: true,
-              });
-              if (allowReconnect) {
-                reconnectTime += 5;
-                log({
-                  message: `Retrying in ${reconnectTime} seconds...`,
-                  isErr: true,
-                });
-                ws.close()
-                isReconnecting = true;
-                setTimeout(connect, reconnectTime * 1000);
-              }
-            }
-          });
-
-          ws.on("message", (message) => handleMessage(message, ws));
-
-          bot.dashboard.ws = ws;
-
-          bot.dashboard.ws.sendPacket = ({ op, d }) => {
-            if (!Bot.bot.dashboard.ws) return log({
-                message:
-                "Attempted to send packet before connection was established.",
-                isErr: true,
-              });
-            Bot.bot.dashboard.ws.send(JSON.stringify({ op, d }));
-            if (debug) log({ message: `TX: ${JSON.stringify({ op, d })}` });
-          };
+      if (config) {
+        const data = config.customData?.["Bot Panel"];
+        applicationId = data.id;
+        applicationSecret = data.secret;
+        variableOptions = {
+          option: data.varSelectType,
+          input: data.varInput,
+          tempVar: data.varTempVar,
         };
+        debug = data.debugMode === "1";
+        wssURL = data.websocketUrl || "wss://wss.botpanel.xyz";
+      } else {
+        return log({
+          message: "Bot Panel has not been configured.",
+          isErr: true,
+        });
+      }
 
-        connect();
+      const bot = DBM.Bot.bot;
+      bot.dashboard = {};
+      let allowReconnect = true;
+      let reconnectTime = 0;
+      let isReconnecting = false;
+      let heartbeat;
 
-        const operationHandlers = {
-          [OPCODES.AUTHENTICATE]: ({ applicationId, applicationSecret }) => {
-            log({ message: "Authenticating with dashboard..." });
-            bot.dashboard.ws.sendPacket({
-              op: OPCODES.AUTHENTICATE,
-              d: {
-                connectAs: "application",
-                applicationId,
-                applicationSecret,
-                version: WS_VERSION
-              }
-            });
-          },
-          [OPCODES.AUTH_SUCCESS]: ({ data, ws }) => {
-            log({
-              message: `Successfully authenticated with application "${data.d.name}" (${applicationId})!`,
-            });
-            clearInterval(heartbeat);
-            heartbeat = setInterval(() => {
-              bot.dashboard.ws.sendPacket({
-                op: OPCODES.HEARTBEAT
+      const connect = () => {
+        isReconnecting = false;
+        log({ message: "Attempting to connect to dashboard..." });
+        const ws = new WebSocket(wssURL);
+
+        ws.on("open", () => {
+          log({ message: "Connected to dashboard." });
+          reconnectTime = 0;
+          isReconnecting = false;
+        });
+
+        ws.on("close", () => {
+          clearInterval(heartbeat);
+          if (!isReconnecting) {
+            log({ message: "Disconnected from dashboard." });
+            if (allowReconnect) {
+              reconnectTime += 5;
+              log({
+                message: `Retrying in ${reconnectTime} seconds...`,
+                isErr: true,
               });
-            }, data.d.heartbeatInterval);
-          },
-          [OPCODES.ERROR]: ({ data }) => {
-            if (data.d.error === "Invalid websocket version. UPDATE EXTENSION.")
-              allowReconnect = false;
-          },
-          [OPCODES.GUILD_INTERACTION]: async ({ data, ws }) => {
-            const { guildId, interactionId, include } = data.d;
+              isReconnecting = true;
+              setTimeout(connect, reconnectTime * 1000);
+            }
+          }
+        });
 
-            const guild = await bot.guilds
+        ws.on("error", (err) => {
+          if (!isReconnecting) {
+            log({
+              message: `Error connecting to dashboard: ${err}`,
+              isErr: true,
+            });
+            if (allowReconnect) {
+              reconnectTime += 5;
+              log({
+                message: `Retrying in ${reconnectTime} seconds...`,
+                isErr: true,
+              });
+              ws.close();
+              isReconnecting = true;
+              setTimeout(connect, reconnectTime * 1000);
+            }
+          }
+        });
+
+        ws.on("message", (message) => handleMessage(message, ws));
+
+        bot.dashboard.ws = ws;
+
+        bot.dashboard.ws.sendPacket = ({ op, d }) => {
+          if (!Bot.bot.dashboard.ws)
+            return log({
+              message:
+                "Attempted to send packet before connection was established.",
+              isErr: true,
+            });
+          Bot.bot.dashboard.ws.send(JSON.stringify({ op, d }));
+          if (debug) log({ message: `TX: ${JSON.stringify({ op, d })}` });
+        };
+      };
+
+      connect();
+
+      const operationHandlers = {
+        [OPCODES.AUTHENTICATE]: ({ applicationId, applicationSecret }) => {
+          log({ message: "Authenticating with dashboard..." });
+          bot.dashboard.ws.sendPacket({
+            op: OPCODES.AUTHENTICATE,
+            d: {
+              connectAs: "application",
+              applicationId,
+              applicationSecret,
+              version: WS_VERSION,
+            },
+          });
+        },
+        [OPCODES.AUTH_SUCCESS]: ({ data, ws }) => {
+          log({
+            message: `Successfully authenticated with application "${data.d.name}" (${applicationId})!`,
+          });
+          clearInterval(heartbeat);
+          heartbeat = setInterval(() => {
+            bot.dashboard.ws.sendPacket({
+              op: OPCODES.HEARTBEAT,
+            });
+          }, data.d.heartbeatInterval);
+        },
+        [OPCODES.ERROR]: ({ data }) => {
+          if (data.d.error === "Invalid websocket version. UPDATE EXTENSION.")
+            allowReconnect = false;
+        },
+        [OPCODES.GUILD_INTERACTION]: async ({ data, ws }) => {
+          const { guildId, interactionId, include } = data.d;
+
+          const guild = await bot.guilds
             .fetch({ guild: guildId, withCounts: false })
             .catch(() => null);
 
-            let serverData = fs.readFileSync(
-              join(__dirname, "../", "data", "servers.json"),
-                                             "utf-8",
-            );
+          let serverData = fs.readFileSync(
+            join(__dirname, "../", "data", "servers.json"),
+            "utf-8",
+          );
 
-            try {
-              serverData = JSON.parse(serverData);
-            } catch (e) {
-              return log({
-                message: `Error parsing server data: ${e}`,
-                isErr: true,
-              });
-            }
+          try {
+            serverData = JSON.parse(serverData);
+          } catch (e) {
+            return log({
+              message: `Error parsing server data: ${e}`,
+              isErr: true,
+            });
+          }
 
-            let roles, channels;
-            if (include.some((i) => ["textChannels", "voiceChannels", "categories"].includes(i)))
-              channels = await guild?.channels.fetch().catch(() => null);
-            if (include.includes("roles"))
-              roles = await guild?.roles.fetch().catch(() => null);
+          let roles, channels;
+          if (
+            include.some((i) =>
+              ["textChannels", "voiceChannels", "categories"].includes(i),
+            )
+          )
+            channels = await guild?.channels.fetch().catch(() => null);
+          if (include.includes("roles"))
+            roles = await guild?.roles.fetch().catch(() => null);
 
-            const textChannels = channels ? channels.filter((c) => c.type === "GUILD_TEXT")
-            .map((c) => {
-              return { id: c.id, name: c.name, position: c.position };
-            }) : [];
+          const textChannels = channels
+            ? channels
+                .filter((c) => c.type === "GUILD_TEXT")
+                .map((c) => {
+                  return { id: c.id, name: c.name, position: c.position };
+                })
+            : [];
 
-            const voiceChannels = channels ? channels.filter((c) => c.type === "GUILD_VOICE")
-            .map((c) => {
-              return { id: c.id, name: c.name, position: c.position };
-            }) : [];
+          const voiceChannels = channels
+            ? channels
+                .filter((c) => c.type === "GUILD_VOICE")
+                .map((c) => {
+                  return { id: c.id, name: c.name, position: c.position };
+                })
+            : [];
 
-            const categories = channels ? channels.filter((c) => c.type === "GUILD_CATEGORY")
-            .map((c) => {
-              return { id: c.id, name: c.name, position: c.position };
-            }) : [];
+          const categories = channels
+            ? channels
+                .filter((c) => c.type === "GUILD_CATEGORY")
+                .map((c) => {
+                  return { id: c.id, name: c.name, position: c.position };
+                })
+            : [];
 
-            roles = roles ? roles.map((r) => {
-              return {
-                id: r.id,
-                name: r.name,
-                position: r.position,
-                managed: r.managed,
-              }}) : [];
-
-              let variables = null;
-              let cache = new DBM.Actions.ActionsCache([], guild);
-
-              if (variableOptions.option && variableOptions.option > 0) {
-                switch (variableOptions.option) {
-                  case "1": // server
-                    variables = DBM.Actions.getVariable(2, variableOptions.input, cache);
-                    break;
-                  case "2": // global
-                    variables = DBM.Actions.getVariable(3, variableOptions.input, cache);
-                    break;
-                  case "3": // command/event
-                    let actions;
-                    const allData = DBM.Files.data.commands.concat(DBM.Files.data.events);
-                    for (let i = 0; i < allData.length; i++) {
-                      if (allData[i]?._id === variableOptions.input) {
-                        actions = allData[i].actions;
-                        break;
-                      }
-                    }
-                    DBM.Actions.executeSubActions(actions, cache, () => {
-                      variables = DBM.Actions.getVariable(1, variableOptions.tempVar, cache);
-                    });
-                    break;
+          roles = roles
+            ? roles.map((r) => {
+                return {
+                  id: r.id,
+                  name: r.name,
+                  position: r.position,
+                  managed: r.managed,
                 };
-              };
+              })
+            : [];
 
-              bot.dashboard.ws.sendPacket({
-                op: OPCODES.REQUEST_GUILD_DATA,
-                d: {
-                  interactionId,
-                  data: serverData[guildId] || {},
-                  inGuild: !!guild,
-                  variables: variables ?? null,
-                  ...(roles && { roles }),
-                                          ...(textChannels && { textChannels }),
-                                          ...(voiceChannels && { voiceChannels }),
-                                          ...(categories && { categories })
+          let variables = null;
+          let cache = new DBM.Actions.ActionsCache([], guild);
+
+          if (variableOptions.option && variableOptions.option > 0) {
+            switch (variableOptions.option) {
+              case "1": // server
+                variables = DBM.Actions.getVariable(
+                  2,
+                  variableOptions.input,
+                  cache,
+                );
+                break;
+              case "2": // global
+                variables = DBM.Actions.getVariable(
+                  3,
+                  variableOptions.input,
+                  cache,
+                );
+                break;
+              case "3": // command/event
+                let actions;
+                const allData = DBM.Files.data.commands.concat(
+                  DBM.Files.data.events,
+                );
+                for (let i = 0; i < allData.length; i++) {
+                  if (allData[i]?._id === variableOptions.input) {
+                    actions = allData[i].actions;
+                    break;
+                  }
                 }
-              });
-          },
-          [OPCODES.MODIFY_GUILD_DATA]: ({ data }) => {
-            Events.dbmDashboardDataUpdate(data.d);
-          }
-        };
-
-        const handleMessage = async (message, ws) => {
-          const data = JSON.parse(message);
-          if (debug) log({ message: `RX: ${JSON.stringify(data)}` });
-
-          const handler = operationHandlers[data.op];
-          if (handler) {
-            try {
-              await handler({ data, ws, applicationId, applicationSecret });
-            } catch (e) {
-              log({
-                message: `Error handling operation ${data.op}: ${e}`,
-                isErr: true
-              });
+                DBM.Actions.executeSubActions(actions, cache, () => {
+                  variables = DBM.Actions.getVariable(
+                    1,
+                    variableOptions.tempVar,
+                    cache,
+                  );
+                });
+                break;
             }
           }
-        };
-        onReady.apply(this, ...params);
+
+          bot.dashboard.ws.sendPacket({
+            op: OPCODES.REQUEST_GUILD_DATA,
+            d: {
+              interactionId,
+              guildName: guild?.name,
+              data: serverData[guildId] || {},
+              inGuild: !!guild,
+              variables: variables ?? null,
+              ...(roles && { roles }),
+              ...(textChannels && { textChannels }),
+              ...(voiceChannels && { voiceChannels }),
+              ...(categories && { categories }),
+            },
+          });
+        },
+        [OPCODES.MODIFY_GUILD_DATA]: ({ data }) => {
+          Events.dbmDashboardDataUpdate(data.d);
+        },
       };
-    }
+
+      const handleMessage = async (message, ws) => {
+        const data = JSON.parse(message);
+        if (debug) log({ message: `RX: ${JSON.stringify(data)}` });
+
+        const handler = operationHandlers[data.op];
+        if (handler) {
+          try {
+            await handler({ data, ws, applicationId, applicationSecret });
+          } catch (e) {
+            log({
+              message: `Error handling operation ${data.op}: ${e}`,
+              isErr: true,
+            });
+          }
+        }
+      };
+      onReady.apply(this, ...params);
+    };
+  },
 };

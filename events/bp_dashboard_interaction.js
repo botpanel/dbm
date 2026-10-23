@@ -9,14 +9,16 @@ module.exports = {
     const { Bot, Actions } = DBM;
 
     DBM.Events.dbmDashboardDataUpdate = function dbmDashboardDataUpdate(data) {
-      if (!Bot.$evts["Bot Panel Dashboard Data Changed"] && !Bot.$evts["DBM Dashboard Data Changed"]) return;
+      const dashboardEvents =
+        Bot.$evts?.["Bot Panel Dashboard Data Changed"] || [];
+      const legacyEvents = Bot.$evts?.["DBM Dashboard Data Changed"] || [];
 
-      for (const event of [...Bot.$evts["Bot Panel Dashboard Data Changed"], ...Bot.$evts["DBM Dashboard Data Changed"]]) {
+      for (const event of [...dashboardEvents, ...legacyEvents]) {
         const temp = {};
-        if(event.temp) temp[event.temp] = data;
+        if (event.temp) temp[event.temp] = data;
 
         Actions.invokeEvent(event, null, temp);
       }
-    }
+    };
   },
 };
